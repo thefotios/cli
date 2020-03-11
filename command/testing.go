@@ -23,6 +23,7 @@ func (cs *CmdStubber) Stub(desiredOutput string) {
 
 func createStubbedPrepareCmd(cs *CmdStubber) func(*exec.Cmd) utils.Runnable {
 	return func(cmd *exec.Cmd) utils.Runnable {
+		cs.Calls = append(cs.Calls, cmd)
 		call := cs.Count
 		cs.Count += 1
 		if call >= len(cs.Stubs) {
