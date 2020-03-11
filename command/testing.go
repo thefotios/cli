@@ -7,18 +7,23 @@ import (
 
 	"github.com/cli/cli/api"
 	"github.com/cli/cli/context"
+	"github.com/cli/cli/test"
 	"github.com/cli/cli/utils"
 )
 
+// TODO this is split between here and test/helpers.go. I did that because otherwise our test
+// package would have to import utils (for utils.Runnable) which felt wrong. while utils_test
+// currently doesn't import test helpers, i don't see why that ought to be precluded.
+// I'm wondering if this is a case for having a global package just for storing Interfaces.
 type CmdStubber struct {
-	Stubs []*outputStub
+	Stubs []*test.OutputStub
 	Count int
 	Calls []*exec.Cmd
 }
 
 func (cs *CmdStubber) Stub(desiredOutput string) {
 	// TODO maybe have some kind of command mapping but going simple for now
-	cs.Stubs = append(cs.Stubs, &outputStub{[]byte(desiredOutput)})
+	cs.Stubs = append(cs.Stubs, &test.OutputStub{[]byte(desiredOutput)})
 }
 
 func createStubbedPrepareCmd(cs *CmdStubber) func(*exec.Cmd) utils.Runnable {
@@ -51,19 +56,6 @@ func initFakeHTTP() *api.FakeHTTP {
 		return api.NewClient(api.ReplaceTripper(http)), nil
 	}
 	return http
-}
-
-// outputStub implements a simple utils.Runnable
-type outputStub struct {
-	output []byte
-}
-
-func (s outputStub) Output() ([]byte, error) {
-	return s.output, nil
-}
-
-func (s outputStub) Run() error {
-	return nil
 }
 
 type errorStub struct {
