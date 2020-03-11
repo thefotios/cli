@@ -42,6 +42,17 @@ func TestPrCreateHelperProcess(*testing.T) {
 	os.Exit(0)
 }
 
+func createStubbedPrepareCmd(cs *test.CmdStubber) func(*exec.Cmd) utils.Runnable {
+	return func(cmd *exec.Cmd) utils.Runnable {
+		call := cs.Count
+		cs.Count += 1
+		if call >= len(cs.Stubs) {
+			panic(fmt.Sprintf("more execs than stubs. most recent call: %v", cmd))
+		}
+		return cs.Stubs[call]
+	}
+}
+
 func TestPRCreate(t *testing.T) {
 	initBlankContext("OWNER/REPO", "feature")
 	http := initFakeHTTP()
@@ -52,11 +63,13 @@ func TestPRCreate(t *testing.T) {
 		} } } }
 	`))
 
-	origGitCommand := git.GitCommand
-	git.GitCommand = test.StubExecCommand("TestPrCreateHelperProcess", "clean")
-	defer func() {
-		git.GitCommand = origGitCommand
-	}()
+	cs := test.CmdStubber{}
+	teardown := utils.SetPrepareCmd(createStubbedPrepareCmd(&cs))
+	defer teardown()
+
+	cs.Stub("")                                         // git status
+	cs.Stub("1234567890,commit 0\n2345678901,commit 1") // git log
+	cs.Stub("")                                         // git push
 
 	output, err := RunCommand(prCreateCmd, `pr create -t "my title" -b "my body"`)
 	eq(t, err, nil)
