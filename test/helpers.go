@@ -8,32 +8,6 @@ import (
 	"path/filepath"
 )
 
-type CmdStubber struct {
-	Stubs []*outputStub
-	Count int
-	Calls []*exec.Cmd
-}
-
-// TODO i'm sinning
-type outputStub struct {
-	output []byte
-}
-
-// TODO i'm sinning
-func (s outputStub) Output() ([]byte, error) {
-	return s.output, nil
-}
-
-// TODO i'm sinning
-func (s outputStub) Run() error {
-	return nil
-}
-
-func (cs *CmdStubber) Stub(desiredOutput string) {
-	// TODO maybe have some kind of command mapping but going simple for now
-	cs.Stubs = append(cs.Stubs, &outputStub{[]byte(desiredOutput)})
-}
-
 func GetTestHelperProcessArgs() []string {
 	args := os.Args
 	for len(args) > 0 {

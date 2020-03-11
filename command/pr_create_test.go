@@ -42,17 +42,6 @@ func TestPrCreateHelperProcess(*testing.T) {
 	os.Exit(0)
 }
 
-func createStubbedPrepareCmd(cs *test.CmdStubber) func(*exec.Cmd) utils.Runnable {
-	return func(cmd *exec.Cmd) utils.Runnable {
-		call := cs.Count
-		cs.Count += 1
-		if call >= len(cs.Stubs) {
-			panic(fmt.Sprintf("more execs than stubs. most recent call: %v", cmd))
-		}
-		return cs.Stubs[call]
-	}
-}
-
 func TestPRCreate(t *testing.T) {
 	initBlankContext("OWNER/REPO", "feature")
 	http := initFakeHTTP()
@@ -63,7 +52,7 @@ func TestPRCreate(t *testing.T) {
 		} } } }
 	`))
 
-	cs := test.CmdStubber{}
+	cs := CmdStubber{}
 	teardown := utils.SetPrepareCmd(createStubbedPrepareCmd(&cs))
 	defer teardown()
 
