@@ -236,6 +236,8 @@ func initAskStubber() (*askStubber, func()) {
 			panic(fmt.Sprintf("more asks than stubs. most recent call: %v", qs))
 		}
 
+		fmt.Printf("%#v\n", as)
+
 		// actually set response
 		stub := as.Stubs[count]
 		if stub == nil {
@@ -246,10 +248,15 @@ func initAskStubber() (*askStubber, func()) {
 			// it doesn't work since Prompt doesn't define anything related to defaults. Defaults are
 			// handled internally to a given implementor of the Prompt interface.
 			// I should at least see if WriteAnswer works for me...
+			// Pausing; WriteAnswer /does/ seem to work but the thing i expected to be easier (setting
+			// from an explicit stub) is actually not working. Pick up with examining that.
 			for _, q := range qs {
 				core.WriteAnswer(response, q.Name, "TODO DETERMINE DEFAULT")
 			}
 		} else {
+			fmt.Printf("%#v\n", stub)
+			// TODO this isn't working; i'm getting 0 for Confirmation, for eg, instead of what I try to
+			// stub for.
 			response = stub
 		}
 
@@ -306,7 +313,7 @@ func TestPRCreate_survey_preview_defaults(t *testing.T) {
 	cs.Stub("1234567890,commit 0\n2345678901,commit 1") // git log
 	cs.Stub("")                                         // git rev-parse
 	cs.Stub("")                                         // git push
-	cs.Stub("")                                         // browser open
+	//cs.Stub("")                                         // browser open
 
 	as, surveyTeardown := initAskStubber()
 	defer surveyTeardown()
@@ -316,11 +323,12 @@ func TestPRCreate_survey_preview_defaults(t *testing.T) {
 	// so; how to simulate when a user inputs nothing? can have a special method for that--even just
 	// "all defaults" would be ok -- but need to figure out if we can even /access/ what the default
 	// values would be.
-	as.StubWithDefaults()
+	as.StubWithDefaults() // titlebody
 	as.Stub(struct {
 		Confirmation int
-	}{0})
+	}{10})
 
+	fmt.Println("************** IN TEST")
 	output, err := RunCommand(prCreateCmd, `pr create`)
 	eq(t, err, nil)
 
