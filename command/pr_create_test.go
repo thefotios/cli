@@ -245,15 +245,9 @@ func initAskStubber() (*askStubber, func()) {
 			if q.Name != sq.Name {
 				panic(fmt.Sprintf("stubbed question mismatch: %s != %s", q.Name, sq.Name))
 			}
-			// TODO how on earth to build up response dynamically? I may need some kind of reflection here.
-			// Trying to use survey's own WriteAnswer. Need to get default differently for regular input
+			// TODO Need to get default differently for regular input
 			// prompt vs editor prompt though. we control editor via surveyext though so consider hacking
 			// that to work.
-			// it doesn't work since Prompt doesn't define anything related to defaults. Defaults are
-			// handled internally to a given implementor of the Prompt interface.
-			// I should at least see if WriteAnswer works for me...
-			// Pausing; WriteAnswer /does/ seem to work but the thing i expected to be easier (setting
-			// from an explicit stub) is actually not working. Pick up with examining that.
 			if sq.Default {
 				core.WriteAnswer(response, q.Name, "TODO DETERMINE DEFAULT")
 			} else {
