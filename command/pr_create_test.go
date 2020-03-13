@@ -222,7 +222,7 @@ func TestPRCreate_cross_repo_same_branch(t *testing.T) {
 type askStubber struct {
 	Asks  [][]*survey.Question
 	Count int
-	Stubs []*interface{}
+	Stubs [][]*QuestionStub
 }
 
 func initAskStubber() (*askStubber, func()) {
@@ -239,8 +239,12 @@ func initAskStubber() (*askStubber, func()) {
 		fmt.Printf("%#v\n", as)
 
 		// actually set response
-		stub := as.Stubs[count]
-		if stub == nil {
+		stubbedQuestions := as.Stubs[count]
+		for i, sq := range stubbedQuestions {
+			q := qs[i]
+			if q.Name != sq.Name {
+				panic(fmt.Sprintf("stubbed question mismatch: %s != %s", q.Name, sq.Name))
+			}
 			// TODO how on earth to build up response dynamically? I may need some kind of reflection here.
 			// Trying to use survey's own WriteAnswer. Need to get default differently for regular input
 			// prompt vs editor prompt though. we control editor via surveyext though so consider hacking
@@ -250,14 +254,11 @@ func initAskStubber() (*askStubber, func()) {
 			// I should at least see if WriteAnswer works for me...
 			// Pausing; WriteAnswer /does/ seem to work but the thing i expected to be easier (setting
 			// from an explicit stub) is actually not working. Pick up with examining that.
-			for _, q := range qs {
+			if sq.Default {
 				core.WriteAnswer(response, q.Name, "TODO DETERMINE DEFAULT")
+			} else {
+				core.WriteAnswer(response, q.Name, sq.Value)
 			}
-		} else {
-			fmt.Printf("%#v\n", stub)
-			// TODO this isn't working; i'm getting 0 for Confirmation, for eg, instead of what I try to
-			// stub for.
-			response = stub
 		}
 
 		return nil
@@ -268,8 +269,15 @@ func initAskStubber() (*askStubber, func()) {
 	return &as, teardown
 }
 
-func (as *askStubber) Stub(answers interface{}) {
-	as.Stubs = append(as.Stubs, &answers)
+type QuestionStub struct {
+	Name    string
+	Value   interface{}
+	Default bool
+}
+
+func (as *askStubber) Stub(stubbedQuestions []*QuestionStub) {
+	// A call to .Ask takes a list of questions; a stub is then a list of questions in the same order.
+	as.Stubs = append(as.Stubs, stubbedQuestions)
 }
 
 func (as *askStubber) StubWithDefaults() {
@@ -323,10 +331,22 @@ func TestPRCreate_survey_preview_defaults(t *testing.T) {
 	// so; how to simulate when a user inputs nothing? can have a special method for that--even just
 	// "all defaults" would be ok -- but need to figure out if we can even /access/ what the default
 	// values would be.
-	as.StubWithDefaults() // titlebody
-	as.Stub(struct {
-		Confirmation int
-	}{10})
+	as.Stub([]*QuestionStub{
+		&QuestionStub{
+			Name:    "title",
+			Default: true,
+		},
+		&QuestionStub{
+			Name:    "body",
+			Default: true,
+		},
+	})
+	as.Stub([]*QuestionStub{
+		&QuestionStub{
+			Name:  "confirmation",
+			Value: 1,
+		},
+	})
 
 	fmt.Println("************** IN TEST")
 	output, err := RunCommand(prCreateCmd, `pr create`)
