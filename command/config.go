@@ -24,6 +24,17 @@ func cfg(cmd *cobra.Command, args []string) error {
 
 	// otherwise, we'll dispatch on arg length for now.
 
+	// TODO i kind of want set to be its own command.
+
+	// TODO just doing this to force config parsing:
+	ctx := contextForCommand(cmd)
+	al, err := ctx.AuthLogin()
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(al)
+
 	switch len(args) {
 	case 0:
 		cfgInteractive(cmd)
