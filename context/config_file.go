@@ -115,6 +115,8 @@ func parseConfig(r io.Reader) (*configEntry, error) {
 				return nil, fmt.Errorf("got unexpected value for protocol: %s", protocolValue)
 			}
 			config.Protocol = protocolValue
+			// TODO fucking with it to test writing back out
+			root.Content[0].Content[i+1].Value = "LOL"
 		case "editor":
 			editorValue := root.Content[0].Content[i+1].Value
 			if !filepath.IsAbs(editorValue) {
@@ -125,9 +127,14 @@ func parseConfig(r io.Reader) (*configEntry, error) {
 			fmt.Printf("found alias config at position %d\n", i)
 			fmt.Println("but alias support is not implemented yet sorry")
 		}
-
 	}
 	fmt.Printf("%#v\n", config)
 	fmt.Println("!!!!!!!!!!!!!!!!!!!")
+	out, err := yaml.Marshal(&root)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(string(out))
+
 	return nil, fmt.Errorf("could not find config entry for %q", defaultHostname)
 }
