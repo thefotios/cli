@@ -91,10 +91,16 @@ func parseConfig(r io.Reader) (*configEntry, error) {
 
 	config := defaultConfig()
 
-	fmt.Println("!!!!!!!!!!!!!!!!!!!")
+	// TODO
+
+	// - [ ] make hosts: nesting format work with new parsing code and config struct
+	// - [ ] support setting editor (or protocol)
+	// - [ ] implement new commands
+	// - [ ] migration code for old (non-hosts) config
+
 	for i, v := range root.Content[0].Content {
 		switch v.Value {
-		case "auth":
+		case "hosts":
 			fmt.Printf("found auth config at position %d\n", i)
 			// TODO adapt existing code for auth
 			//for i := 0; i < len(config.Content[0].Content[0].Content)-1; i = i + 2 {
